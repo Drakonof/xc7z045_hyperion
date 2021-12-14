@@ -14,8 +14,8 @@ module sync_fifo #
     
     parameter integer FIFO_DEPTH         = 32,
     
-    parameter integer ALMOST_FULL_VALUE  = 2,
-    parameter integer ALMOST_EMPTY_VALUE = 2,
+    parameter integer ALMOST_FULL_VAL  = 2, // hom much of words to an full state
+    parameter integer ALMOST_EMPTY_VAL = 2, // hom much of words to an empty state
     
     parameter         RAM_TYPE           = "block" // "distributed", "block"
 )
@@ -34,13 +34,10 @@ module sync_fifo #
     output logic                      o_empty,
     output logic                      o_rd_valid
 );
-    localparam integer A_FULL        = FIFO_DEPTH - ALMOST_FULL_VALUE; 
-    localparam integer A_EMPTY       = ALMOST_EMPTY_VALUE;
+    localparam integer A_FULL        = FIFO_DEPTH - ALMOST_FULL_VAL; 
+    localparam integer A_EMPTY       = ALMOST_EMPTY_VAL;
     
     localparam integer POINTER_WIDTH = $clog2(FIFO_DEPTH);  
-    
-    logic                         full;
-    logic                         empty;
     
     logic [POINTER_WIDTH - 1 : 0] wr_pointer;
     logic [POINTER_WIDTH - 1 : 0] rd_pointer;
@@ -48,77 +45,76 @@ module sync_fifo #
     logic [POINTER_WIDTH : 0]     word_counter;
     
     (*ram_style = RAM_TYPE*) 
-    logic [FIFO_DEPTH - 1 : 0] mem;
+    logic [DATA_WIDTH - 1 : 0] mem [0 : FIFO_DEPTH - 1] ;
     
     initial begin
-        wr_pointer   = '0;
-        rd_pointer   = '0;
-        word_counter = '0;
-    
         for (int i = 0; i < FIFO_DEPTH; i++) begin
             mem[i] = '0;
         end
     end
+    
+    assign o_full         = (word_counter == (FIFO_DEPTH - 1));
+    assign o_empty        = word_counter == '0;
 
-    always_comb begin
-        o_almost_full  = (word_counter == A_FULL) && (i_rd_en == '0);
-        o_almost_empty = (word_counter == A_EMPTY) && (i_wr_en == '0);
-        
-        o_full         = full; 
-        o_empty        = empty;
-   
-        o_rd_data      = mem[rd_pointer];
-   
-        full           = word_counter == FIFO_DEPTH;
-        empty          = word_counter == '0;
+    assign o_almost_full  = (word_counter >= A_FULL);
+    assign o_almost_empty = (word_counter <= A_EMPTY);
+  
+    always @ (posedge i_clk) begin : wr_pointer_control
+        if (i_s_rst_n == '0) begin
+            wr_pointer   <= '0;
+        end 
+        else if ((i_wr_en == '1)  && (o_full == '0)) begin
+            wr_pointer <= wr_pointer + 1'h1;
+        end
     end
     
-    always_ff @ (posedge i_clk) begin : control
+    always @ (posedge i_clk) begin  : rd_pointer_control
+        if (i_s_rst_n == '0) begin
+            rd_pointer   <= '0;
+        end 
+        else if ((i_rd_en == '1) && (o_empty == '0)) begin
+            rd_pointer <= rd_pointer + 1'h1;
+        end
+    end
+    
+    always @ (posedge i_clk) begin  : rd_data
+        if (i_s_rst_n == '0) begin
+            o_rd_data  <= '0;
+            o_rd_valid <= '0;
+        end 
+        else begin
+            if ((i_rd_en == '1) && (o_empty == '0)) begin
+                o_rd_data <= mem[rd_pointer];
+            end
+            
+            o_rd_valid <= (i_rd_en == '1) && (o_empty == '0);
+        end
+    end
+    
+    always @ (posedge i_clk) begin  : wr_data
+        if ((i_wr_en == '1) && (o_full == '0)) begin
+            mem[wr_pointer] <= i_wr_data;
+        end
+    end
+    
+    always @ (posedge i_clk) begin  : word_counter_control
         if (i_s_rst_n == '0) begin
             word_counter <= '0;
-            wr_pointer   <= '0;
-            rd_pointer   <= '0;
+        end 
+        else if ((i_rd_en == '1) && (i_wr_en == '0) && (word_counter != 0)) begin
+            word_counter <= word_counter - 1'h1;
+        end 
+        else if ((i_rd_en == '0) && (i_wr_en == '1) && (word_counter != FIFO_DEPTH)) begin
+            word_counter <= word_counter + 1'h1;
         end
-        else begin
-            if ((i_wr_en == '1) && (i_rd_en == '0) && (full == '0)) begin
-                word_counter <= word_counter + 1'h1;
-            end
-            else if ((i_wr_en == '0) && (i_rd_en == '1) && (empty == '0)) begin
-                word_counter <= word_counter - 1'h1;
-            end
+    end
 
-            if ((i_wr_en == '1) && (full == '0)) begin
-                if (wr_pointer == FIFO_DEPTH - 1) begin
-                    wr_pointer <= '0;
-                end
-                else begin
-                    wr_pointer <= wr_pointer + 1'h1;
-                end
-            end
-
-            if ((i_rd_en == '1) && (empty == '0)) begin
-                if (rd_pointer == FIFO_DEPTH - 1) begin
-                    rd_pointer <= '0;
-                end
-                else begin
-                    rd_pointer <= rd_pointer + 1'h1;
-                end
-            end
-              
-            if (i_wr_en == '1) begin
-                mem[wr_pointer] <= i_wr_data;
-            end;
-            
-            o_rd_valid <= (i_rd_en == '1) && (empty == '0);
-        end                         
-    end                          
- 
-    always @ (*) begin : assertion
-        if ((i_wr_en == '1) && (full == '1)) begin
+    always @ (*) begin
+        if ((i_wr_en == '1) && (o_full == '1)) begin
             $error("full fifo is being written ");
         end
 
-        if ((i_rd_en == '1) && (empty = '1)) begin
+        if ((i_rd_en == '1) && (o_empty == '1)) begin
             $error("empty fifo is being read");
         end
     end

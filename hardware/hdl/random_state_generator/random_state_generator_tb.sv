@@ -15,13 +15,13 @@
 
 module random_state_generator_tb;
 //-------------------------------------------------- settings
-    localparam integer STATE_0_MIN_VALUE = 100;
-    localparam integer STATE_0_MAX_VALUE = 600;
-    localparam integer STATE_1_MIN_VALUE = 60;
-    localparam integer STATE_1_MAX_VALUE = 500;
+    localparam integer STATE_0_MIN_VAL = 100;
+    localparam integer STATE_0_MAX_VAL = 600;
+    localparam integer STATE_1_MIN_VAL = 60;
+    localparam integer STATE_1_MAX_VAL = 500;
     
-    localparam integer CLOCK_PERIOD      = 100;
-    localparam integer TEST_ITER_NUM     = 1000000;
+    localparam integer CLOCK_PERIOD    = 100;
+    localparam integer TEST_ITER_NUM   = 1000000;
 //-------------------------------------------------- end of settings
     
     bit clk     = '0;
@@ -31,10 +31,10 @@ module random_state_generator_tb;
 
     random_state_generator # 
     (
-        .STATE_0_MIN_VALUE (STATE_0_MIN_VALUE),
-		.STATE_0_MAX_VALUE (STATE_0_MAX_VALUE),
-		.STATE_1_MIN_VALUE (STATE_1_MIN_VALUE),
-		.STATE_1_MAX_VALUE (STATE_1_MAX_VALUE)
+        .STATE_0_MIN_VAL (STATE_0_MIN_VAL),
+		.STATE_0_MAX_VAL (STATE_0_MAX_VAL),
+		.STATE_1_MIN_VAL (STATE_1_MIN_VAL),
+		.STATE_1_MAX_VAL (STATE_1_MAX_VAL)
     )
     random_state_generator_dut                         
     (

@@ -1,10 +1,170 @@
 `timescale 1ns / 1ps
 
 module sync_fifo_tb;
+//-------------------------------------------------- settings
+    localparam integer DATA_WIDTH            = 8;
+    localparam integer FIFO_DEPTH            = 8;
+    localparam integer ALMOST_FULL_VAL       = 2;
+    localparam integer ALMOST_EMPTY_VAL      = 2;
+    localparam         RAM_TYPE              = "block"; // "distributed", "block"
+    
+    localparam integer WR_SL_STATE_0_MIN_VAL = 100;
+    localparam integer WR_SL_STATE_0_MAX_VAL = 350;
+    localparam integer WR_SL_STATE_1_MIN_VAL = 80;
+    localparam integer WR_SL_STATE_1_MAX_VAL = 500;
+  
+    localparam integer WR_FS_STATE_0_MIN_VAL = 50;
+    localparam integer WR_FS_STATE_0_MAX_VAL = 100;
+    localparam integer WR_FS_STATE_1_MIN_VAL = 20;
+    localparam integer WR_FS_STATE_1_MAX_VAL = 80;
+  
+    localparam integer RD_SL_STATE_0_MIN_VAL = 100;
+    localparam integer RD_SL_STATE_0_MAX_VAL = 350;
+    localparam integer RD_SL_STATE_1_MIN_VAL = 80;
+    localparam integer RD_SL_STATE_1_MAX_VAL = 500;
+  
+    localparam integer RD_FS_STATE_0_MIN_VAL = 50;
+    localparam integer RD_FS_STATE_0_MAX_VAL = 100;
+    localparam integer RD_FS_STATE_1_MIN_VAL = 20;
+    localparam integer RD_FS_STATE_1_MAX_VAL = 80;
+    
+    localparam integer CLOCK_PERIOD          = 100;
+    localparam integer TEST_ITER_NUM         = 1000000;
+//-------------------------------------------------- end of settings
 
+    localparam integer ADDR_WIDTH            = $clog2(FIFO_DEPTH);
+    localparam integer FILE_INITIAL          = CLOCK_PERIOD * FIFO_DEPTH;
+    
+    bit                      clk          = '0;
+    bit                      s_rst_n      = '0;
+    bit                      wr_en        = '0;
+    bit                      rd_en        = '0;
+    bit [DATA_WIDTH - 1 : 0] wr_data      = '0;
+    
+    bit                      almost_full;
+    bit                      full;
+    bit                      almost_empty;
+    bit                      empty;
+    bit                      rd_valid;
+    bit [DATA_WIDTH - 1 : 0] rd_data;
+    
+    bit wr_activity;
+    bit rd_activity;
+    
+    bit wr_slow_state;
+    bit wr_fast_state;
 
+    bit rd_slow_state;
+    bit rd_fast_state;
+    
+    bit en;
+    
+    always_comb begin
+        wr_activity = wr_slow_state && wr_fast_state && en && (full == '0); 
+        rd_activity = rd_slow_state && rd_fast_state && en && (empty == '0);
+        wr_en       = wr_activity;
+        rd_en       = rd_activity;
+    end 
+    
+    sync_fifo #
+    (
+        .DATA_WIDTH       (DATA_WIDTH      ),
+                           
+        .FIFO_DEPTH       (FIFO_DEPTH      ),
+                            
+        .ALMOST_FULL_VAL  (ALMOST_FULL_VAL ),
+        .ALMOST_EMPTY_VAL (ALMOST_EMPTY_VAL),
+                            
+        .RAM_TYPE         (RAM_TYPE         )
+    )
+    sync_fifo_dut
+    ( 
+        .i_clk          (clk         ),
+        .i_s_rst_n      (s_rst_n     ),
+                        
+        .i_wr_en        (wr_en       ),
+        .i_wr_data      (wr_data     ),
+        .o_almost_full  (almost_full ),
+        .o_full         (full        ),
+                        
+        .i_rd_en        (rd_en       ),
+        .o_rd_data      (rd_data     ),
+        .o_almost_empty (almost_empty),
+        .o_empty        (empty       ),
+        .o_rd_valid     (rd_valid    )
+    );
+    
+    random_state_generator #
+    (
+        .STATE_0_MIN_VAL (WR_SL_STATE_0_MIN_VAL), 
+        .STATE_0_MAX_VAL (WR_SL_STATE_0_MAX_VAL), 
+        .STATE_1_MIN_VAL (WR_SL_STATE_1_MIN_VAL), 
+        .STATE_1_MAX_VAL (WR_SL_STATE_1_MAX_VAL)
+    )
+    wr_slow_state_generator
+    (
+        .i_clk     (clk          ), 
+        .i_s_rst_n (s_rst_n      ),
+        .o_state   (wr_slow_state)
+    );
+    
+    random_state_generator #
+    (
+        .STATE_0_MIN_VAL (WR_FS_STATE_0_MIN_VAL), 
+        .STATE_0_MAX_VAL (WR_FS_STATE_0_MAX_VAL), 
+        .STATE_1_MIN_VAL (WR_FS_STATE_1_MIN_VAL), 
+        .STATE_1_MAX_VAL (WR_FS_STATE_1_MAX_VAL)
+    )
+    wr_fast_state_generator
+    (
+        .i_clk     (clk          ), 
+        .i_s_rst_n (s_rst_n      ),
+        .o_state   (wr_fast_state)
+    );
+   
+    random_state_generator #
+    (
+        .STATE_0_MIN_VAL (RD_SL_STATE_0_MIN_VAL), 
+        .STATE_0_MAX_VAL (RD_SL_STATE_0_MAX_VAL), 
+        .STATE_1_MIN_VAL (RD_SL_STATE_1_MIN_VAL), 
+        .STATE_1_MAX_VAL (RD_SL_STATE_1_MAX_VAL)
+    )
+    rd_slow_state_generator
+    (
+        .i_clk     (clk          ), 
+        .i_s_rst_n (s_rst_n      ),
+        .o_state   (rd_slow_state)
+    );
+   
+    random_state_generator #
+    (
+        .STATE_0_MIN_VAL (RD_FS_STATE_0_MIN_VAL), 
+        .STATE_0_MAX_VAL (RD_FS_STATE_0_MAX_VAL), 
+        .STATE_1_MIN_VAL (RD_FS_STATE_1_MIN_VAL), 
+        .STATE_1_MAX_VAL (RD_FS_STATE_1_MAX_VAL)
+    )
+    rd_fast_state_generator
+    (
+        .i_clk     (clk          ), 
+        .i_s_rst_n (s_rst_n      ),
+        .o_state   (rd_fast_state)
+    );
+  
+    always begin
+        #(CLOCK_PERIOD / 2) clk = !clk;
+    end
+    
+    initial begin
+       s_rst_n <= '0;
+       en      <= '0;
+       @(posedge clk);
+       
+       s_rst_n <= '1;
+       en      <= '1;
+       repeat (TEST_ITER_NUM) begin
+            @(posedge clk);
+       end
 
-
-
-
+       $stop();
+   end
 endmodule
