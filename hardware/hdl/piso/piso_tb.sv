@@ -1,12 +1,14 @@
 `timescale 1ns / 1ps
 
 module piso_tb;
+//-------------------------------------------------- setting
     localparam                      DO_MSB_FIRST = "true";
     localparam                      DO_FAST      = "true";
     localparam integer              DATA_WIDTH   = 8;
     localparam [DATA_WIDTH - 1 : 0] MAX_VALUE    = ((2 << DATA_WIDTH) - 1);
     localparam integer              CLOCK_PERIOD = 100;
     localparam integer              REPEATS      = 1000;
+//-------------------------------------------------- end of settings
 
     bit                      serl_data ;  
     bit                      data_valid; 
