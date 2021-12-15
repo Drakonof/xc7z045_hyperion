@@ -1,3 +1,38 @@
+/*--------------------------------------------------
+| engineer : A. Shimko
+|
+| module   : piso.sv (parallel in serial out)
+|
+| testbench: piso_tb.sv
+| 13.12.21 : created
+|
+|
+|
+|
+*/
+
+/*
+piso # 
+(
+    .DATA_WIDTH   (),
+    .DO_MSB_FIRST (),
+    .DO_FAST      ()
+)
+piso_inst                         
+(
+    .i_clk        (),
+    .i_s_rst_n    (),
+    
+    .i_wr_en      (),
+    .i_data       (), // DATA_WIDTH width
+    
+    .o_data_valid (),
+    .o_data       ()
+);
+*/
+
+`include "platform.vh"
+
 `timescale 1ns / 1ps
 
 module piso # 

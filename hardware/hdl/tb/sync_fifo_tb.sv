@@ -1,12 +1,30 @@
+/*--------------------------------------------------
+| engineer : A. Shimko
+|
+| module   : sync_fifo.sv
+|
+| testbench: sync_fifo_tb.sv
+| 15.12.21 : created
+|
+|
+| 
+|
+*/
+
+`include "platform.vh"
+
 `timescale 1ns / 1ps
 
 module sync_fifo_tb;
-//-------------------------------------------------- settings
+    //-------------------------------------------------- settings
     localparam integer DATA_WIDTH            = 8;
     localparam integer FIFO_DEPTH            = 8;
     localparam integer ALMOST_FULL_VAL       = 2;
     localparam integer ALMOST_EMPTY_VAL      = 2;
-    localparam         RAM_TYPE              = "block"; // "distributed", "block"
+    
+`ifdef XILINX_PLATFORM
+    localparam         RAM_TYPE              = "distributed"; // "distributed", "block"
+`endif
     
     localparam integer WR_SL_STATE_0_MIN_VAL = 100;
     localparam integer WR_SL_STATE_0_MAX_VAL = 350;
@@ -30,15 +48,15 @@ module sync_fifo_tb;
     
     localparam integer CLOCK_PERIOD          = 100;
     localparam integer TEST_ITER_NUM         = 1000000;
-//-------------------------------------------------- end of settings
+    //-------------------------------------------------- end of settings
 
     localparam integer ADDR_WIDTH            = $clog2(FIFO_DEPTH);
     localparam integer FILE_INITIAL          = CLOCK_PERIOD * FIFO_DEPTH;
     
     bit                      clk          = '0;
     bit                      s_rst_n      = '0;
-    bit                      wr_en        = '0;
-    bit                      rd_en        = '0;
+    bit                      wr_en ;
+    bit                      rd_en;
     bit [DATA_WIDTH - 1 : 0] wr_data      = '0;
     
     bit                      almost_full;
@@ -48,8 +66,6 @@ module sync_fifo_tb;
     bit                      rd_valid;
     bit [DATA_WIDTH - 1 : 0] rd_data;
     
-    bit wr_activity;
-    bit rd_activity;
     
     bit wr_slow_state;
     bit wr_fast_state;
@@ -60,10 +76,8 @@ module sync_fifo_tb;
     bit en;
     
     always_comb begin
-        wr_activity = wr_slow_state && wr_fast_state && en && (full == '0); 
-        rd_activity = rd_slow_state && rd_fast_state && en && (empty == '0);
-        wr_en       = wr_activity;
-        rd_en       = rd_activity;
+        wr_en = wr_slow_state && wr_fast_state && en && (full == 1'h0); 
+        rd_en = rd_slow_state && rd_fast_state && en && (empty == 1'h0);
     end 
     
     sync_fifo #
@@ -71,11 +85,13 @@ module sync_fifo_tb;
         .DATA_WIDTH       (DATA_WIDTH      ),
                            
         .FIFO_DEPTH       (FIFO_DEPTH      ),
-                            
+        
+`ifdef XILINX_PLATFORM                           
+        .RAM_TYPE         (RAM_TYPE        ), 
+`endif        
+                  
         .ALMOST_FULL_VAL  (ALMOST_FULL_VAL ),
-        .ALMOST_EMPTY_VAL (ALMOST_EMPTY_VAL),
-                            
-        .RAM_TYPE         (RAM_TYPE         )
+        .ALMOST_EMPTY_VAL (ALMOST_EMPTY_VAL)
     )
     sync_fifo_dut
     ( 
@@ -149,6 +165,25 @@ module sync_fifo_tb;
         .i_s_rst_n (s_rst_n      ),
         .o_state   (rd_fast_state)
     );
+    
+    bit [DATA_WIDTH - 1 : 0] rd_counter = '0;
+    integer errors = 0;
+    
+    always_ff @ (posedge clk) begin
+        if(wr_en == '1) begin
+            wr_data <= wr_data + 1'h1;
+        end
+    end
+    
+    always_ff @ (posedge clk) begin
+        if(rd_valid == '1) begin
+            if (rd_counter != rd_data) begin
+                errors++;
+            end
+             
+            rd_counter <= rd_counter + 1'h1;
+        end
+    end
   
     always begin
         #(CLOCK_PERIOD / 2) clk = !clk;
@@ -164,6 +199,13 @@ module sync_fifo_tb;
        repeat (TEST_ITER_NUM) begin
             @(posedge clk);
        end
+       
+       if (errors == 0) begin
+            $display("Test passed.");
+        end 
+        else begin
+            $display("Test failed with %d errors.", errors);
+        end
 
        $stop();
    end

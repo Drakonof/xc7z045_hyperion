@@ -1,3 +1,18 @@
+/*--------------------------------------------------
+| engineer : A. Shimko
+|
+| module   : piso.sv (parallel in serial out)
+|
+| testbench: piso_tb.sv
+| 13.12.21 : created
+|
+|
+| 
+|
+*/
+
+`include "platform.vh"
+
 `timescale 1ns / 1ps
 
 module piso_tb;

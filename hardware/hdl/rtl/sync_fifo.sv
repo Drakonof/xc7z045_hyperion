@@ -2,9 +2,47 @@
 | engineer : A. Shimko
 |
 | module   : sync_fifo.sv
+|
 | testbench: sync_fifo_tb.sv
-| 21.11.21 : created
+| 15.12.21 : created
+|
+|
+|
+|
 */
+
+/*
+sync_fifo # 
+(
+    .DATA_WIDTH       (),
+    .FIFO_DEPTH       (),
+    
+`ifdef XILINX_PLATFORM
+    .RAM_TYPE         (), // "distributed", "block"
+`endif   
+
+    .ALMOST_FULL_VAL  (),
+    .ALMOST_EMPTY_VAL (),
+)
+sync_fifo_inst                         
+(
+    .i_clk          (),
+    .i_s_rst_n      (),
+    
+    .i_wr_en        (),
+    .i_wr_data      (), // DATA_WIDTH width
+    .o_almost_full  (),
+    .o_full         (),
+    
+    .i_rd_en        (),
+    .o_rd_data      (), // DATA_WIDTH width
+    .o_almost_empty (),
+    .o_empty        (),
+    .o_rd_valid     ()
+);
+*/
+
+`include "platform.vh"
 
 `timescale 1ns / 1ps
 
@@ -14,10 +52,12 @@ module sync_fifo #
     
     parameter integer FIFO_DEPTH         = 32,
     
+`ifdef XILINX_PLATFORM
+    parameter         RAM_TYPE           = "block", // "distributed", "block"
+`endif    
+
     parameter integer ALMOST_FULL_VAL  = 2, // hom much of words to an full state
-    parameter integer ALMOST_EMPTY_VAL = 2, // hom much of words to an empty state
-    
-    parameter         RAM_TYPE           = "block" // "distributed", "block"
+    parameter integer ALMOST_EMPTY_VAL = 2 // hom much of words to an empty state
 )
 (
     input  logic                      i_clk,
@@ -44,7 +84,9 @@ module sync_fifo #
  
     logic [POINTER_WIDTH : 0]     word_counter;
     
+`ifdef XILINX_PLATFORM    
     (*ram_style = RAM_TYPE*) 
+`endif
     logic [DATA_WIDTH - 1 : 0] mem [0 : FIFO_DEPTH - 1] ;
     
     initial begin
@@ -53,15 +95,17 @@ module sync_fifo #
         end
     end
     
-    assign o_full         = (word_counter == (FIFO_DEPTH - 1));
-    assign o_empty        = word_counter == '0;
+    always_comb begin
+        o_full         = (word_counter == FIFO_DEPTH);
+        o_empty        = word_counter == '0;
 
-    assign o_almost_full  = (word_counter >= A_FULL);
-    assign o_almost_empty = (word_counter <= A_EMPTY);
+        o_almost_full  = (word_counter == A_FULL - 1);
+        o_almost_empty = (word_counter == A_EMPTY);
+    end
   
     always @ (posedge i_clk) begin : wr_pointer_control
         if (i_s_rst_n == '0) begin
-            wr_pointer   <= '0;
+            wr_pointer <= '0;
         end 
         else if ((i_wr_en == '1)  && (o_full == '0)) begin
             wr_pointer <= wr_pointer + 1'h1;
@@ -70,7 +114,7 @@ module sync_fifo #
     
     always @ (posedge i_clk) begin  : rd_pointer_control
         if (i_s_rst_n == '0) begin
-            rd_pointer   <= '0;
+            rd_pointer <= '0;
         end 
         else if ((i_rd_en == '1) && (o_empty == '0)) begin
             rd_pointer <= rd_pointer + 1'h1;
@@ -109,7 +153,8 @@ module sync_fifo #
         end
     end
 
-    always @ (*) begin
+    // Not synthesized
+    always @ (posedge i_clk) begin
         if ((i_wr_en == '1) && (o_full == '1)) begin
             $error("full fifo is being written ");
         end

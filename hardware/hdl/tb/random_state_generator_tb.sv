@@ -11,6 +11,8 @@
 |
 */
 
+`include "platform.vh"
+
 `timescale 1ns / 1ps
 
 module random_state_generator_tb;
