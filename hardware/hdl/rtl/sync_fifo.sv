@@ -156,11 +156,11 @@ module sync_fifo #
     // Not synthesized
     always @ (posedge i_clk) begin
         if ((i_wr_en == '1) && (o_full == '1)) begin
-            $error("full fifo is being written ");
+            $display("full fifo is being written ");
         end
 
         if ((i_rd_en == '1) && (o_empty == '1)) begin
-            $error("empty fifo is being read");
+            $display("empty fifo is being read");
         end
     end
 
