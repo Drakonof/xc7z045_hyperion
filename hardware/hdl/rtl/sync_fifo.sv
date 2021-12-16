@@ -4,8 +4,8 @@
 | module   : sync_fifo.sv
 |
 | testbench: sync_fifo_tb.sv
+| 
 | 15.12.21 : created
-|
 |
 |
 |
@@ -57,7 +57,7 @@ module sync_fifo #
 `endif    
 
     parameter integer ALMOST_FULL_VAL  = 2, // hom much of words to an full state
-    parameter integer ALMOST_EMPTY_VAL = 2 // hom much of words to an empty state
+    parameter integer ALMOST_EMPTY_VAL = 2  // hom much of words to an empty state
 )
 (
     input  logic                      i_clk,

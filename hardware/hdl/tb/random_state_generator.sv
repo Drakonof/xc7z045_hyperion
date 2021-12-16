@@ -4,11 +4,11 @@
 | module   : random_state_generator.sv
 |
 | testbench: random_state_generator_tb.sv
+| 
 | 14.12.21 : created
 |
-|
+| 
 | an unsyntezable module
-|
 */
 
 /*
