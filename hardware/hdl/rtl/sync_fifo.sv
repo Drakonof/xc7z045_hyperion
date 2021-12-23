@@ -6,7 +6,9 @@
 | testbench: sync_fifo_tb.sv
 | 
 | 15.12.21 : created
-|
+| 23.12.21 : the FIFO_DEPTH parameter was both 
+|            replaced to a ADDR_WIDTH parameter and 
+|            moved to localparam from parameter.
 |
 |
 */
