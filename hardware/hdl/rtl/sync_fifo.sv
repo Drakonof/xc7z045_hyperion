@@ -15,7 +15,7 @@
 sync_fifo # 
 (
     .DATA_WIDTH       (),
-    .FIFO_DEPTH       (),
+    .ADDR_WIDTH       (),
     
 `ifdef XILINX_PLATFORM
     .RAM_TYPE         (), // "distributed", "block"
@@ -50,14 +50,16 @@ module sync_fifo #
 (
     parameter integer DATA_WIDTH         = 8,
     
-    parameter integer FIFO_DEPTH         = 32,
+    parameter integer ADDR_WIDTH         = 8,
     
 `ifdef XILINX_PLATFORM
     parameter         RAM_TYPE           = "block", // "distributed", "block"
 `endif    
 
     parameter integer ALMOST_FULL_VAL  = 2, // hom much of words to an full state
-    parameter integer ALMOST_EMPTY_VAL = 2  // hom much of words to an empty state
+    parameter integer ALMOST_EMPTY_VAL = 2,  // hom much of words to an empty state
+    
+    localparam integer FIFO_DEPTH = (2 ** ADDR_WIDTH)
 )
 (
     input  logic                      i_clk,
@@ -77,7 +79,7 @@ module sync_fifo #
     localparam integer A_FULL        = FIFO_DEPTH - ALMOST_FULL_VAL; 
     localparam integer A_EMPTY       = ALMOST_EMPTY_VAL;
     
-    localparam integer POINTER_WIDTH = $clog2(FIFO_DEPTH);  
+    localparam integer POINTER_WIDTH = ADDR_WIDTH;  
     
     logic [POINTER_WIDTH - 1 : 0] wr_pointer;
     logic [POINTER_WIDTH - 1 : 0] rd_pointer;

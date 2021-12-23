@@ -18,7 +18,7 @@
 module sync_fifo_tb;
     //-------------------------------------------------- settings
     localparam integer DATA_WIDTH            = 8;
-    localparam integer FIFO_DEPTH            = 8;
+    localparam integer ADDR_WIDTH            = 8;
     localparam integer ALMOST_FULL_VAL       = 2;
     localparam integer ALMOST_EMPTY_VAL      = 2;
     
@@ -50,7 +50,7 @@ module sync_fifo_tb;
     localparam integer TEST_ITER_NUM         = 1000000;
     //-------------------------------------------------- end of settings
 
-    localparam integer ADDR_WIDTH            = $clog2(FIFO_DEPTH);
+    localparam integer FIFO_DEPTH            = 2 ** ADDR_WIDTH;  
     localparam integer FILE_INITIAL          = CLOCK_PERIOD * FIFO_DEPTH;
     
     bit                      clk          = '0;
@@ -84,7 +84,7 @@ module sync_fifo_tb;
     (
         .DATA_WIDTH       (DATA_WIDTH      ),
                            
-        .FIFO_DEPTH       (FIFO_DEPTH      ),
+        .ADDR_WIDTH       (ADDR_WIDTH      ),
         
 `ifdef XILINX_PLATFORM                           
         .RAM_TYPE         (RAM_TYPE        ), 
