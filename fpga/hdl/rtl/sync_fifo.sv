@@ -5,39 +5,42 @@
 |
 | testbench: sync_fifo_tb.sv
 | 
+| brief    :
+|
+| todo     :
+|
 | 15.12.21 : created
 | 23.12.21 : the FIFO_DEPTH parameter was both 
 |            replaced to a ADDR_WIDTH parameter and 
 |            moved to localparam from parameter.
-|
 |
 */
 
 /*
 sync_fifo # 
 (
-    .DATA_WIDTH       (),
-    .ADDR_WIDTH       (),
-    
+    .DATA_WIDTH       (), // default: 8
+    .ADDR_WIDTH       (), // default: 8
+
 `ifdef XILINX_PLATFORM
-    .RAM_TYPE         (), // "distributed", "block"
+    .RAM_TYPE         (), // default: block, cases: "distributed", "block"
 `endif   
 
-    .ALMOST_FULL_VAL  (),
-    .ALMOST_EMPTY_VAL (),
+    .ALMOST_FULL_VAL  (), // default: 2
+    .ALMOST_EMPTY_VAL (), // default: 2
 )
 sync_fifo_inst                         
 (
     .i_clk          (),
     .i_s_rst_n      (),
-    
+
     .i_wr_en        (),
-    .i_wr_data      (), // DATA_WIDTH width
+    .i_wr_data      (), // width: DATA_WIDTH
     .o_almost_full  (),
     .o_full         (),
-    
+
     .i_rd_en        (),
-    .o_rd_data      (), // DATA_WIDTH width
+    .o_rd_data      (), // width: ATA_WIDTH
     .o_almost_empty (),
     .o_empty        (),
     .o_rd_valid     ()
@@ -107,7 +110,7 @@ module sync_fifo #
         o_almost_empty = (word_counter == A_EMPTY);
     end
   
-    always @ (posedge i_clk) begin : wr_pointer_control
+    always_ff @ (posedge i_clk) begin : wr_pointer_control
         if (i_s_rst_n == '0) begin
             wr_pointer <= '0;
         end 
@@ -116,7 +119,7 @@ module sync_fifo #
         end
     end
     
-    always @ (posedge i_clk) begin  : rd_pointer_control
+    always_ff @ (posedge i_clk) begin  : rd_pointer_control
         if (i_s_rst_n == '0) begin
             rd_pointer <= '0;
         end 
@@ -125,7 +128,7 @@ module sync_fifo #
         end
     end
     
-    always @ (posedge i_clk) begin  : rd_data
+    always_ff @ (posedge i_clk) begin  : rd_data
         if (i_s_rst_n == '0) begin
             o_rd_data  <= '0;
             o_rd_valid <= '0;
@@ -139,13 +142,13 @@ module sync_fifo #
         end
     end
     
-    always @ (posedge i_clk) begin  : wr_data
+    always_ff @ (posedge i_clk) begin  : wr_data
         if ((i_wr_en == '1) && (o_full == '0)) begin
             mem[wr_pointer] <= i_wr_data;
         end
     end
     
-    always @ (posedge i_clk) begin  : word_counter_control
+    always_ff @ (posedge i_clk) begin  : word_counter_control
         if (i_s_rst_n == '0) begin
             word_counter <= '0;
         end 

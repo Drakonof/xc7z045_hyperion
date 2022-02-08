@@ -5,27 +5,29 @@
 |
 | testbench: piso_tb.sv
 | 
+| brief    :
+|
+| todo     :
+|
 | 13.12.21 : created
-|
-|
 |
 */
 
 /*
 piso # 
 (
-    .DATA_WIDTH   (),
-    .DO_MSB_FIRST (),
-    .DO_FAST      ()
+    .DATA_WIDTH   (), // default: 8
+    .DO_MSB_FIRST (), // default: "true", cases: "true", "false"
+    .DO_FAST      ()  // default: "true", cases: "true", "false"
 )
 piso_inst                         
 (
     .i_clk        (),
     .i_s_rst_n    (),
-    
+
     .i_wr_en      (),
-    .i_data       (), // DATA_WIDTH width
-    
+    .i_data       (), // width: DATA_WIDTH
+
     .o_data_valid (),
     .o_data       ()
 );

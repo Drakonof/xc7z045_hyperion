@@ -5,25 +5,27 @@
 |
 | testbench: random_state_generator_tb.sv
 | 
+| brief    : an unsyntezable module
+|
+| todo     :
+| 
 | 14.12.21 : created
 |
-| 
-| an unsyntezable module
 */
 
 /*
 random_state_generator # 
 (
-    .STATE_0_MIN_VAL (),
-    .STATE_0_MAX_VAL (),
-    .STATE_1_MIN_VAL (),
-    .STATE_1_MAX_VAL ()
+    .STATE_0_MIN_VAL (), // default: 10
+    .STATE_0_MAX_VAL (), // default: 20
+    .STATE_1_MIN_VAL (), // default: 30
+    .STATE_1_MAX_VAL ()  // default: 40
 )
 random_state_generator_inst                         
 (
     .i_clk     (),
     .i_s_rst_n (),
-    
+
     .o_state   ()
 );
 */

@@ -5,9 +5,11 @@
 |
 | testbench: random_state_generator_tb.sv
 | 
-| 14.12.21 : created
+| brief    :
 |
+| todo     :
 | 
+| 14.12.21 : created
 |
 */
 
@@ -51,6 +53,7 @@ module random_state_generator_tb;
     end
     
     initial begin
+        $display($time, " random_state_generator_tb: started");
         s_rst_n <= '0;
         @(posedge clk);
         
@@ -60,6 +63,8 @@ module random_state_generator_tb;
 	    repeat(TEST_ITER_NUM) begin
 	        @(posedge clk);
 	    end
+        
+        $display($time, " random_state_generator_tb: finished");
 
 	    $stop();
     end

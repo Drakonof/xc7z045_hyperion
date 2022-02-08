@@ -5,9 +5,11 @@
 |
 | testbench: sync_fifo_tb.sv
 | 
-| 15.12.21 : created
+| brief    :
 |
+| todo     :
 | 
+| 15.12.21 : created
 |
 */
 
@@ -190,6 +192,7 @@ module sync_fifo_tb;
     end
     
     initial begin
+       $display($time, " sync_fifo_tb: started");
        s_rst_n <= '0;
        en      <= '0;
        @(posedge clk);
@@ -201,11 +204,13 @@ module sync_fifo_tb;
        end
        
        if (errors == 0) begin
-            $display("Test passed.");
+            $display($time, " sync_fifo_tb: test passed");
         end 
         else begin
-            $display("Test failed with %d errors.", errors);
+            $display($time, " sync_fifo_tb: test failed with %d errors", errors);
         end
+        
+        $display($time, " sync_fifo_tb: finished");
 
        $stop();
    end

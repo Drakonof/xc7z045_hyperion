@@ -1,0 +1,89 @@
+#!/bin/bash
+
+project_name=xc7z010_hyperion
+
+is_some_thing=0
+
+printf "There were removed:\n"
+
+if [ -d ../bd/${project_name}_bd ]; 
+then
+    rm -r ../bd/${project_name}_bd
+    let "is_some_thing++"
+    printf "%s\n" ${project_name}_bd
+fi
+
+if [ -d ../.Xil ]; 
+then
+    rm -r ../.Xil
+    let "is_some_thing++"
+    printf "%s\n" .Xil
+fi
+
+if [ -d ../$project_name.hw ]; 
+then
+    rm -r ../$project_name.hw
+    let "is_some_thing++"
+    printf "%s\n" $project_name.hw
+fi
+
+if [ -d ../$project_name.ip_user_files ]; 
+then
+    rm -r ../$project_name.ip_user_files
+    let "is_some_thing++"
+    printf "%s\n" $project_name.ip_user_files
+fi
+
+if [ -d ../$project_name.runs ]; 
+then
+    rm -r ../$project_name.runs
+    let "is_some_thing++"
+    printf "%s\n" $project_name.runs
+fi
+
+if [ -d ../$project_name.sdk ]; 
+then
+    rm -r ../$project_name.sdk
+    let "is_some_thing++"
+    printf "%s\n" $project_name.sdk
+fi
+
+if [ -d ../$project_name.sim ]; 
+then
+    rm -r ../$project_name.sim
+    let "is_some_thing++"
+    printf "%s\n" $project_name.sim
+fi
+
+if [ -d ../$project_name.srcs ]; 
+then
+    rm -r ../$project_name.srcs
+    let "is_some_thing++"
+    printf "%s\n" $project_name.srcs
+fi
+
+if [ -d ../$project_name.cache ]; 
+then
+    rm -r ../$project_name.cache
+    let "is_some_thing++"
+    printf "%s\n" $project_name.cache
+fi
+
+if [ -f ../*.xpr ]; then
+    rm ../*.xpr
+fi
+
+if [ -f ../*.jou ]; then
+    rm ../*.jou
+fi
+
+if [ -f ../*.log ]; then
+    rm ../*.log
+fi
+
+if [ "$is_some_thing" -eq 0 ]; 
+then
+    printf "none\n"
+else
+	printf "total: %d\n" $is_some_thing
+fi

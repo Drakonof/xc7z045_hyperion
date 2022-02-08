@@ -5,9 +5,11 @@
 |
 | testbench: piso_tb.sv
 | 
-| 13.12.21 : created
+| brief    :
 |
+| todo     :
 | 
+| 13.12.21 : created
 |
 */
 
@@ -91,6 +93,7 @@ module piso_tb;
     end   
 
     initial begin
+        $display($time, " piso_tb: started");
         s_rst_n   <= '0;
 
         wr_en     <= '0;
@@ -103,11 +106,13 @@ module piso_tb;
         check_piso;
 
         if (errors == 0) begin
-            $display("Test passed.");
+            $display($time, " piso_tb: test passed");
         end 
         else begin
-            $display("Test failed with %d errors.", errors);
+            $display($time, " piso_tb: test failed with %d errors", errors);
         end
+        
+        $display($time, " piso_tb: finished");
 
         $stop();
     end 
