@@ -67,7 +67,7 @@ module true_dual_ram #
     input  logic [ADDR_WIDTH - 1 : 0] i_addr_a,
     input  logic [DATA_WIDTH - 1 : 0] i_data_a,
     
-    output logic                      o_data_en_a,
+    output logic                      o_data_valid_a,
     output logic [DATA_WIDTH - 1 : 0] o_data_a,
     
     input  logic                      i_clk_b,
@@ -77,18 +77,18 @@ module true_dual_ram #
     input  logic [ADDR_WIDTH - 1 : 0] i_addr_b,
     input  logic [DATA_WIDTH - 1 : 0] i_data_b,
     
-    output logic                      o_data_en_b,
+    output logic                      o_data_valid_b,
     output logic [DATA_WIDTH - 1 : 0] o_data_b
     
 );
 
-    logic [DATA_WIDTH-1:0]   ram_data_a [LATENCY_NUM - 1 : 0];
-    logic [DATA_WIDTH-1:0]   ram_data_b [LATENCY_NUM - 1 : 0];
+    logic [DATA_WIDTH-1:0]   ram_data_a;
+    logic [DATA_WIDTH-1:0]   ram_data_b;
     
-    logic [DATA_WIDTH-1:0]   data_en_a  [LATENCY_NUM - 1 : 0];
-    logic [DATA_WIDTH-1:0]   data_en_b  [LATENCY_NUM - 1 : 0];
+    logic [DATA_WIDTH-1:0]   data_valid_a;
+    logic [DATA_WIDTH-1:0]   data_valid_b;
     
-    logic [DATA_WIDTH - 1:0] ram        [RAM_DEPTH - 1 : 0];
+    logic [DATA_WIDTH - 1:0] ram [RAM_DEPTH - 1 : 0];
     
     integer i = 0;
 
@@ -98,7 +98,7 @@ module true_dual_ram #
                 $readmemh(INIT_FILE, ram, 0, RAM_DEPTH - 1);
             end
         end 
-        else begin: iram_init_to_zero
+        else begin: ram_init_to_zero
             initial begin
                 for (i = 0; i < RAM_DEPTH; i++) begin
                     ram[i] = '0;
@@ -110,8 +110,8 @@ module true_dual_ram #
             for (i = 0; i < LATENCY_NUM; i++) begin
                 ram_data_a[i] = '0;
                 ram_data_b[i] = '0;
-                data_en_a[i]  = '0;
-                data_en_b[i]  = '0;
+                data_valid_a[i]  = '0;
+                data_valid_b[i]  = '0;
             end
         end
     endgenerate
@@ -121,10 +121,10 @@ module true_dual_ram #
             ram[i_addr_a] <= i_data_a;
         end
         else begin
-            ram_data_a[MSB] <= ram[i_addr_a];
+            ram_data_a <= ram[i_addr_a];
         end
         
-        data_en_a[MSB] <= ~i_wr_en_a;
+        data_valid_a <= ~i_wr_en_a;
     end
 
     always_ff @ (posedge i_clk_b) begin
@@ -132,10 +132,10 @@ module true_dual_ram #
             ram[i_addr_b] <= i_data_b;
         end
         else begin
-            ram_data_b[MSB] <= ram[i_addr_b];
+            ram_data_b[LSB] <= ram[i_addr_b];
         end
         
-        data_en_b[MSB] <= ~i_wr_en_b;
+        data_valid_b[LSB] <= ~i_wr_en_b;
     end
     
     generate
@@ -144,12 +144,12 @@ module true_dual_ram #
                 if (i_a_rst_n_b == '0) begin
                     for (i = 0; i < LATENCY_NUM; i++) begin
                         ram_data_a[i] <= '0;
-                        data_en_a[i]  <= '0;
+                        data_valid_a[i]  <= '0;
                     end
                 end
                 else begin
                     ram_data_a[LSB] <= ram_data_a[MSB];
-                    data_en_a[LSB]  <= data_en_a[MSB];
+                    data_valid_a[LSB]  <= data_valid_a[MSB];
                 end        
             end
 
@@ -157,22 +157,22 @@ module true_dual_ram #
                 if (i_a_rst_n_b == '0) begin
                     for (i = 0; i < LATENCY_NUM; i++) begin
                         ram_data_b[i] <= '0;
-                        data_en_b[i]  <= '0;
+                        data_valid_b[i]  <= '0;
                     end
                 end
                 else begin
-                    ram_data_b[LSB] <= ram_data_b[MSB];
-                    data_en_b[LSB]  <= data_en_b[MSB];
+                    ram_data_b[LSB]   <= ram_data_b[MSB];
+                    data_valid_b[LSB] <= data_valid_b[MSB];
                 end        
             end
         end
     endgenerate
     
     always_comb begin
-        o_data_a    = ram_data_a[LSB];
+        o_data_a    = ram_data_a;
         o_data_b    = ram_data_b[LSB];
-        o_data_en_a = data_en_a[LSB];
-        o_data_en_b = data_en_b[LSB];
+        o_data_valid_a = data_valid_a[LSB];
+        o_data_valid_b = data_valid_b[LSB];
     end
 
 endmodule

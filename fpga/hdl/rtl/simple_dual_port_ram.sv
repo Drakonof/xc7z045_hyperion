@@ -10,11 +10,14 @@
 | todo     :
 |
 | 08.12.21 : created
+| 12.03.21 : the wr_clk and the rd_clk was mremoved
+|            the i_clk was add for the wr and the rd
+|            i_ and o_ prefecs were added to input and output signals
+|            1'h0 were replaced to just '0
 |
 */
 
 /*
-
 simple_dual_port_ram #
 (
     .DATA_WIDTH     (), // default: 8
@@ -27,20 +30,17 @@ simple_dual_port_ram #
 )
 simple_dual_port_ram_inst
 (
-    .wr_clk        (),
-    .wr_en         (),
+    .i_clk           (),
+    
+    .i_wr_en         (),
+    .i_wr_data       (), // width: DATA_WIDTH
+    .i_wr_byte_valid (), // width: BYTE_VALID_WIDTH width
+    .i_wr_addr       (), // width: ADDR_WIDTH
 
-    .wr_data       (), // width: DATA_WIDTH
-    .wr_byte_valid (), // width: BYTE_VALID_WIDTH width
-
-    .wr_addr       (), // width: ADDR_WIDTH
-
-    .rd_clk        (),
-    .rd_en         (),
-
-    .rd_data       (), // width: DATA_WIDTH
-    .rd_data_valid (),
-    .rd_addr       ()  // width: DATA_WIDTH
+    .i_rd_en         (),
+    .o_rd_data       (), // width: DATA_WIDTH
+    .o_rd_data_valid (),
+    .i_rd_addr       ()  // width: DATA_WIDTH
 );
 */
 
@@ -59,20 +59,17 @@ module simple_dual_port_ram #
     localparam integer BYTE_VALID_WIDTH = DATA_WIDTH / 8  
 )
 (
-    input logic                            wr_clk,
-    input logic                            wr_en,
+    input logic                            i_clk,
+    
+    input logic                            i_wr_en,
+    input logic [DATA_WIDTH - 1 : 0]       i_wr_data,
+    input logic [BYTE_VALID_WIDTH - 1 : 0] i_wr_byte_valid,
+    input logic [ADDR_WIDTH - 1 : 0]       i_wr_addr,
 
-    input logic [DATA_WIDTH - 1 : 0]       wr_data,
-    input logic [BYTE_VALID_WIDTH - 1 : 0] wr_byte_valid,
-
-    input logic [ADDR_WIDTH - 1 : 0]       wr_addr,
-
-    input logic                            rd_clk,
-    input logic                            rd_en,
-
-    output logic [DATA_WIDTH - 1 : 0]      rd_data,
-    output logic                           rd_data_valid,
-    input logic [ADDR_WIDTH - 1 : 0]       rd_addr
+    input logic                            i_rd_en,
+    output logic [DATA_WIDTH - 1 : 0]      o_rd_data,
+    output logic                           o_rd_data_valid,
+    input logic [ADDR_WIDTH - 1 : 0]       i_rd_addr
 );
     localparam integer MEM_DEPTH = 2 ** ADDR_WIDTH;
 
@@ -82,7 +79,7 @@ module simple_dual_port_ram #
     initial begin
         if (INIT_FILE_NAME == "" ) begin
             for (int i = 0; i < MEM_DEPTH; i++) begin
-                mem[i] = {DATA_WIDTH{1'h0}};
+                mem[i] = '0;
             end
         end
         else begin
@@ -90,11 +87,11 @@ module simple_dual_port_ram #
         end
     end
 
-    always_ff @(posedge wr_clk) begin  
-        if (wr_en == 1'h1) begin 
+    always_ff @(posedge i_clk) begin  
+        if (i_wr_en == 1'h1) begin 
             for (int i = 0; i < BYTE_VALID_WIDTH; i++) begin
-                if (wr_byte_valid[i] == 1'h1) begin
-                    mem[wr_addr][(i * 8) +: 8] <= wr_data[(i * 8) +: 8];
+                if (i_wr_byte_valid[i] == 1'h1) begin
+                    mem[i_wr_addr][(i * 8) +: 8] <= i_wr_data[(i * 8) +: 8];
                 end
             end
         end
@@ -102,24 +99,24 @@ module simple_dual_port_ram #
 
 generate 
     if (IS_OUT_LATENCY == "true") begin
-        always_ff @(posedge rd_clk) begin  
-            if (rd_en == 1'h1) begin 
-                rd_data <= mem[rd_addr];
+        always_ff @(posedge i_clk) begin  
+            if (i_rd_en == 1'h1) begin 
+                o_rd_data <= mem[i_rd_addr];
             end
 
-            rd_data_valid <= rd_en;
+            o_rd_data_valid <= i_rd_en;
         end
     end
     else begin
         always_comb begin  
-            if (rd_en == 1'h1) begin 
-                rd_data = mem[rd_addr];
+            if (i_rd_en == 1'h1) begin 
+                o_rd_data = mem[i_rd_addr];
             end
             else begin
-                rd_data = {DATA_WIDTH{1'h0}};
+                o_rd_data = {DATA_WIDTH{1'h0}};
             end
 
-            rd_data_valid = rd_en;
+            o_rd_data_valid = i_rd_en;
         end
     end
 endgenerate
